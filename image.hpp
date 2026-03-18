@@ -12,9 +12,36 @@ namespace RayTracer
     class Image
     {
     public:
-        const unsigned width;
-        const unsigned height;
+        unsigned width;
+        unsigned height;
         Color* pixels;
+
+        Image() = default;
+
+        Image(const char *path)
+        {
+            auto file = std::ifstream(path);
+            std::string token;
+
+            file >> token; // PPM type
+            file >> token; // Width
+            width = std::stoi(token);
+            file >> token; // Height
+            height = std::stoi(token);
+            file >> token; // RGB
+
+            pixels = new Color[width * height];
+
+            unsigned i = 0;
+            std::string r, g, b;
+            while (file >> r && file >> g && file >> b)
+            {
+                pixels[i].r = std::stod(r) / 255.0;
+                pixels[i].g = std::stod(g) / 255.0;
+                pixels[i].b = std::stod(b) / 255.0;
+                i++;
+            }
+        }
 
         Image(unsigned width, unsigned height): width(width), height(height)
         {
@@ -30,6 +57,11 @@ namespace RayTracer
         void set_pixel(unsigned x, unsigned y, Color color)
         {
             pixels[width * y + x] = color;
+        }
+
+        Color get_pixel(unsigned x, unsigned y)
+        {
+            return pixels[width * y + x];
         }
 
         void to_ppm(const char* path)

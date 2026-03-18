@@ -77,7 +77,37 @@ namespace RayTracer
 
         MaterialInfo texture(Point3 p) override
         {
-            return material->get_info(p);
+            return material->get_info(
+                    p,
+                    [this](Point3 p)
+                    {
+                        return this->mapper(p);
+                    }
+            );
+        }
+
+    private:
+        PixelLoc mapper(Point3 p)
+        {
+            Vector3 dir = normal(p);
+
+            double longitude = 0.5 - atan2(dir.z, dir.x) / (2.0 * M_PI);
+            double latitude = 0.5 + asin(dir.y) / (M_PI);
+
+            /*
+            longitude += 0.25;
+            if (longitude > 1.0) longitude -= 1.0;
+            latitude += 0.35;
+            if (latitude > 1.0) latitude -= 1.0;
+            */
+
+            unsigned x = static_cast<unsigned>(
+                    longitude * (dynamic_cast<ImageTexture*>(material))->texture.width);
+            unsigned y = static_cast<unsigned>(
+                    latitude * (dynamic_cast<ImageTexture*>(material))->texture.height);
+
+
+            return PixelLoc{x, y};
         }
     };
 }

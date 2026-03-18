@@ -75,7 +75,7 @@ Color cast_ray(Ray ray, double t_min, double t_max, Scene scene, int it = 5)
             if (shadow)
                 continue;
 
-            double fd = 1 / (l->position - rec.p).norm_squared();
+            double fd = 1 / (l->position - rec.p).norm();
 
             if (mat.kd > 0.0)
             {
@@ -99,7 +99,7 @@ Color cast_ray(Ray ray, double t_min, double t_max, Scene scene, int it = 5)
     }
     else
     {
-        return Color(0.0, 0.1, 0.2);
+        return Color(0.0, 0.4, 0.6);
     }
 }
 
@@ -125,36 +125,40 @@ int main(int argc, char **argv)
     auto scene = Scene();
 
     auto camera = Camera(
-        Point3(0.0, -4.0, 1.5), Point3(0.0, 0.0, 0.0),
-        M_PI / 3.0, M_PI / 4.0, 1.0, 1000
+        Point3(0.0, -4.0, 2.0), Point3(0.0, 1.0, 0.0),
+        M_PI / 3.0, M_PI / 4.0, 2.0, 800
     );
+
+    auto earth_tex = Image("texture/earth.ppm");
 
     auto blue_mat = UniformTexture(Color(0.0, 1.0, 1.0), 0.5, 0.5, 10.0);
     auto red_mat = UniformTexture(Color(1.0, 0.2, 0.2), 1.0, 0.0, 10.0);
     auto green_mat = UniformTexture(Color(0.3, 1.0, 0.1), 0.7, 0.3, 10.0);
     auto metallic_mat = UniformTexture(WHITE, 0.1, 0.9, 10.0);
     auto gray_mat = UniformTexture(Color(0.3, 0.3, 0.3), 0.9, 0.1, 10.0);
+    auto earth_mat = ImageTexture(earth_tex, 1.0, 0.0, 10.0);
 
-    Sphere o1 = Sphere(Point3(1.0, 0.0, 0.5), 0.5, &blue_mat);
-    Sphere o2 = Sphere(Point3(-1.0, 0.0, 0.5), 0.5, &red_mat);
-    Sphere o3 = Sphere(Point3(0.0, 1.0, 0.5), 0.5, &metallic_mat);
+    Sphere o1 = Sphere(Point3(1.5, 0.0, 0.5), 0.5, &blue_mat);
+    Sphere o2 = Sphere(Point3(-1.5, 0.0, 0.5), 0.5, &red_mat);
+    Sphere o3 = Sphere(Point3(0.0, -1.5, 0.5), 0.5, &metallic_mat);
+    Sphere o4 = Sphere(Point3(0.0, 0.0, 0.8), 0.8, &earth_mat);
 
     Sphere gr = Sphere(Point3(0.0, 0.0, -5000.0), 5000.0, &gray_mat);
 
     scene.add_object(&o1);
     scene.add_object(&o2);
     scene.add_object(&o3);
+    scene.add_object(&o4);
 
     scene.add_object(&gr);
 
-    PointLight l1 = PointLight(Point3(0.0, -1.0, 1.5), WHITE, 1.0);
-    PointLight l2 = PointLight(Point3(0.0, 1.5, 2.0), WHITE, 1.0);
-    PointLight l3 = PointLight(Point3(-1.5, -1.0, 2.0), WHITE, 2.0);
-    PointLight l4 = PointLight(Point3(1.5, -1.0, 2.0), WHITE, 2.0);
-    PointLight l5 = PointLight(Point3(1.5, -1.0, 2.0), WHITE, 1.0);
+    //PointLight l1 = PointLight(Point3(1.0, -1.5, 2.0), Color(1.0, 0.8, 0.5), 0.6);
+    //PointLight l2 = PointLight(Point3(-1.0, -1.5, 2.0), Color(1.0, 0.8, 0.5), 0.6);
+    PointLight l1 = PointLight(Point3(1.0, -1.5, 3.0), WHITE, 1.0);
+    PointLight l2 = PointLight(Point3(-1.0, -1.5, 3.0), WHITE, 1.0);
 
-    scene.add_light(&l3);
-    scene.add_light(&l4);
+    scene.add_light(&l1);
+    scene.add_light(&l2);
 
     Image img = generate_image(camera, scene);
 
