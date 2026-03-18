@@ -13,6 +13,7 @@
 
 #define EPS 0.0001
 #define INF 1000.0
+#define _FD false
 
 #define WHITE Color(1.0, 1.0, 1.0)
 #define RED Color(1.0, 0.0, 0.0)
@@ -24,7 +25,9 @@
 
 using namespace RayTracer;
 
-Color cast_ray(Ray ray, double t_min, double t_max, Scene scene, int it = 5)
+
+Color cast_ray(Ray ray, double t_min, double t_max, Scene scene,
+               Image* background = nullptr, int it = 5)
 {
     HitRecord rec = {false, 0.0, Point3(), nullptr};
     Object* hit_object = nullptr;
@@ -75,11 +78,11 @@ Color cast_ray(Ray ray, double t_min, double t_max, Scene scene, int it = 5)
             if (shadow)
                 continue;
 
-            double fd = 1 / (l->position - rec.p).norm();
+            double fd = _FD ? 1 / (l->position - rec.p).norm() : 1.0;
 
             if (mat.kd > 0.0)
             {
-                Id = Id + mat.color * mat.kd * std::max((N * L), 0.0) * l->color * l->intensity * fd;
+                Id = Id + mat.color * mat.kd * std::max((N * L), 0.125) * l->color * l->intensity * fd;
             }
 
             if (mat.ks > 0.0)
@@ -88,7 +91,7 @@ Color cast_ray(Ray ray, double t_min, double t_max, Scene scene, int it = 5)
 
                 if (it > 0)
                 {
-                    Ir = cast_ray({rec.p + N * EPS, S}, 0.0, INF, scene, it - 1) * mat.ks;
+                    Ir = cast_ray({rec.p + N * EPS, S}, 0.0, INF, scene, background, it - 1) * mat.ks;
                 }
             }
 
@@ -99,11 +102,37 @@ Color cast_ray(Ray ray, double t_min, double t_max, Scene scene, int it = 5)
     }
     else
     {
-        return Color(0.0, 0.4, 0.6);
+        if (background)
+        {
+            Vector3 n = ray.direction;
+
+            double a = M_PI / 2.0;
+            Vector3 dir = n;
+            dir.x = n.x;
+            dir.y = cos(a)*n.y - sin(a)*n.z;
+            dir.z = sin(a)*n.y + cos(a)*n.z;
+
+            dir = -dir;
+
+            double longitude = 0.5 + atan2(dir.z, dir.x) / (2.0 * M_PI);
+            double latitude = 0.5 + asin(dir.y) / (M_PI);
+
+            longitude += 0.25;
+            if (longitude > 1.0) longitude -= 1.0;
+
+            unsigned x = static_cast<unsigned>(longitude * background->width);
+            unsigned y = static_cast<unsigned>(latitude * background->height);
+
+            return background->get_pixel(x, y);
+        }
+        else
+        {
+            return Color(0.0, 0.4, 0.6);
+        }
     }
 }
 
-Image generate_image(Camera cam, Scene scene)
+Image generate_image(Camera cam, Scene scene, Image* background = nullptr)
 {
     Image img = Image(cam.w_res, cam.h_res);
 
@@ -112,7 +141,7 @@ Image generate_image(Camera cam, Scene scene)
         for (unsigned x = 0; x < cam.w_res; x++)
         {
             Ray ray = cam.get_ray(x, y);
-            Color color = cast_ray(ray, 0.0, INF, scene);
+            Color color = cast_ray(ray, 0.0, INF, scene, background);
             img.set_pixel(x, y, color);
         }
     }
@@ -125,42 +154,28 @@ int main(int argc, char **argv)
     auto scene = Scene();
 
     auto camera = Camera(
-        Point3(0.0, -4.0, 2.0), Point3(0.0, 1.0, 0.0),
-        M_PI / 3.0, M_PI / 4.0, 2.0, 800
+        Point3(0.0, -10.0, 0.0), Point3(0.0, 0.0, 0.0),
+        M_PI / 3.0, M_PI / 4.0, 1.0, 600
     );
 
+    auto stars_tex = Image("texture/stars.ppm");
     auto earth_tex = Image("texture/earth.ppm");
+    auto moon_tex = Image("texture/moon.ppm");
 
-    auto blue_mat = UniformTexture(Color(0.0, 1.0, 1.0), 0.5, 0.5, 10.0);
-    auto red_mat = UniformTexture(Color(1.0, 0.2, 0.2), 1.0, 0.0, 10.0);
-    auto green_mat = UniformTexture(Color(0.3, 1.0, 0.1), 0.7, 0.3, 10.0);
-    auto metallic_mat = UniformTexture(WHITE, 0.1, 0.9, 10.0);
-    auto gray_mat = UniformTexture(Color(0.3, 0.3, 0.3), 0.9, 0.1, 10.0);
     auto earth_mat = ImageTexture(earth_tex, 1.0, 0.0, 10.0);
+    auto moon_mat = ImageTexture(moon_tex, 1.0, 0.0, 10.0);
 
-    Sphere o1 = Sphere(Point3(1.5, 0.0, 0.5), 0.5, &blue_mat);
-    Sphere o2 = Sphere(Point3(-1.5, 0.0, 0.5), 0.5, &red_mat);
-    Sphere o3 = Sphere(Point3(0.0, -1.5, 0.5), 0.5, &metallic_mat);
-    Sphere o4 = Sphere(Point3(0.0, 0.0, 0.8), 0.8, &earth_mat);
+    Sphere earth = Sphere(Point3(0.0, 0.0, 0.0), 1.0, &earth_mat);
+    Sphere moon = Sphere(Point3(-1.0, -1.0, 0.0), 1700.0/6400.0, &moon_mat);
 
-    Sphere gr = Sphere(Point3(0.0, 0.0, -5000.0), 5000.0, &gray_mat);
+    scene.add_object(&earth);
+    scene.add_object(&moon);
 
-    scene.add_object(&o1);
-    scene.add_object(&o2);
-    scene.add_object(&o3);
-    scene.add_object(&o4);
+    PointLight l = PointLight(Point3(15.0, -15.0, 0.0), WHITE, 1.0);
 
-    scene.add_object(&gr);
+    scene.add_light(&l);
 
-    //PointLight l1 = PointLight(Point3(1.0, -1.5, 2.0), Color(1.0, 0.8, 0.5), 0.6);
-    //PointLight l2 = PointLight(Point3(-1.0, -1.5, 2.0), Color(1.0, 0.8, 0.5), 0.6);
-    PointLight l1 = PointLight(Point3(1.0, -1.5, 3.0), WHITE, 1.0);
-    PointLight l2 = PointLight(Point3(-1.0, -1.5, 3.0), WHITE, 1.0);
-
-    scene.add_light(&l1);
-    scene.add_light(&l2);
-
-    Image img = generate_image(camera, scene);
+    Image img = generate_image(camera, scene, &stars_tex);
 
     img.to_ppm("result.ppm");
 

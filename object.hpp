@@ -89,17 +89,19 @@ namespace RayTracer
     private:
         PixelLoc mapper(Point3 p)
         {
-            Vector3 dir = normal(p);
+            Vector3 n = normal(p);
 
-            double longitude = 0.5 - atan2(dir.z, dir.x) / (2.0 * M_PI);
+            double a = M_PI / 2.0;
+            Vector3 dir = n;
+            dir.x = n.x;
+            dir.y = cos(a)*n.y - sin(a)*n.z;
+            dir.z = sin(a)*n.y + cos(a)*n.z;
+
+            double longitude = 0.5 + atan2(dir.z, dir.x) / (2.0 * M_PI);
             double latitude = 0.5 + asin(dir.y) / (M_PI);
 
-            /*
             longitude += 0.25;
             if (longitude > 1.0) longitude -= 1.0;
-            latitude += 0.35;
-            if (latitude > 1.0) latitude -= 1.0;
-            */
 
             unsigned x = static_cast<unsigned>(
                     longitude * (dynamic_cast<ImageTexture*>(material))->texture.width);
