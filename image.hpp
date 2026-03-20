@@ -14,7 +14,7 @@ namespace RayTracer
     public:
         unsigned width;
         unsigned height;
-        Color* pixels;
+        std::vector<Color> pixels;
 
         Image() = default;
 
@@ -30,7 +30,7 @@ namespace RayTracer
             height = std::stoi(token);
             file >> token; // RGB
 
-            pixels = new Color[width * height];
+            pixels = std::vector<Color>(width * height);
 
             unsigned i = 0;
             std::string r, g, b;
@@ -45,13 +45,8 @@ namespace RayTracer
 
         Image(unsigned width, unsigned height): width(width), height(height)
         {
-            pixels = new Color[width * height];
+            pixels = std::vector<Color>(width * height);
         };
-
-        ~Image()
-        {
-            delete[] pixels;
-        }
 
     public:
         void set_pixel(unsigned x, unsigned y, Color color)

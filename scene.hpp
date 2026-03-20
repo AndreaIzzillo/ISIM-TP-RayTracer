@@ -10,20 +10,20 @@ namespace RayTracer
     class Scene
     {
     public:
-        std::vector<Object*> objects;
-        std::vector<Light*> lights;
+        std::vector<std::unique_ptr<Object>> objects;
+        std::vector<std::unique_ptr<Light>> lights;
 
         Scene() = default;
 
     public:
-        void add_object(Object* obj)
+        void add_object(std::unique_ptr<Object> obj)
         {
-            objects.push_back(obj);
+            objects.push_back(std::move(obj));
         }
 
-        void add_light(Light* light)
+        void add_light(std::unique_ptr<Light> light)
         {
-            lights.push_back(light);
+            lights.push_back(std::move(light));
         }
     };
 }

@@ -3,8 +3,26 @@
 #include <ostream>
 #include <cmath>
 
+#define EPS 0.00001
+#define INF 10000.0
+
 namespace RayTracer
 {
+    class Pixel
+    {
+    public:
+        unsigned x, y;
+
+        Pixel() = default;
+        Pixel(unsigned x, unsigned y): x(x), y(y) {};
+
+    public:
+        friend std::ostream& operator<<(std::ostream& out, Pixel& p)
+        {
+            return out << "[" << p.x << "," << p.y << "]";
+        }
+    };
+
     class Vector3
     {
     public:
@@ -120,5 +138,15 @@ namespace RayTracer
         {
             return out << "P(" << p.x << "," << p.y << "," << p.z << ")";
         }
+    };
+
+    class Ray
+    {
+    public:
+        Point3 origin;
+        Vector3 direction;
+
+        Ray() = default;
+        Ray(Point3 o, Vector3 d): origin(o), direction(d) {};
     };
 }

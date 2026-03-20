@@ -6,40 +6,29 @@
 #include "image.hpp"
 #include "scene.hpp"
 #include "material.hpp"
-#include "ray.hpp"
 #include "object.hpp"
 #include "light.hpp"
 #include "camera.hpp"
 
-#define EPS 0.0001
-#define INF 1000.0
 #define _FD false
-
-#define WHITE Color(1.0, 1.0, 1.0)
-#define RED Color(1.0, 0.0, 0.0)
-#define GREEN Color(0.0, 1.0, 0.0)
-#define BLUE Color(0.0, 0.0, 1.0)
-#define CYAN Color(0.0, 1.0, 1.0)
-#define MAGENTA Color(1.0, 0.0, 1.0)
-#define YELLOW Color(1.0, 1.0, 0.0)
+#define _DEBUG true
 
 using namespace RayTracer;
 
-
-Color cast_ray(Ray ray, double t_min, double t_max, Scene scene,
-               Image* background = nullptr, int it = 5)
+Color cast_ray(Ray ray, double t_min, double t_max, Scene& scene,
+               std::shared_ptr<Image> background = nullptr, int it = 5)
 {
     HitRecord rec = {false, 0.0, Point3(), nullptr};
     Object* hit_object = nullptr;
     double closest = t_max;
 
-    for (auto object : scene.objects)
+    for (auto& object : scene.objects)
     {
-        auto temp_rec = object->hit(ray, t_min, closest);
+        const auto& temp_rec = object->hit(ray, t_min, closest);
 
         if (temp_rec.hit)
         {
-            hit_object = object;
+            hit_object = object.get();
             rec = temp_rec;
             closest = temp_rec.t - EPS;
         }
@@ -47,7 +36,7 @@ Color cast_ray(Ray ray, double t_min, double t_max, Scene scene,
 
     if (rec.hit)
     {
-        auto mat = hit_object->texture(rec.p);
+        const auto& mat = hit_object->texture(rec.p);
 
         auto result = Color(0.0, 0.0, 0.0);
 
@@ -55,7 +44,7 @@ Color cast_ray(Ray ray, double t_min, double t_max, Scene scene,
         auto Is = Color(0.0, 0.0, 0.0); // Specular
         auto Ir = Color(0.0, 0.0, 0.0); // Reflexion
 
-        for (auto l : scene.lights)
+        for (auto& l : scene.lights)
         {
             auto O = ray.direction;
             auto N = hit_object->normal(rec.p);
@@ -63,11 +52,11 @@ Color cast_ray(Ray ray, double t_min, double t_max, Scene scene,
             auto S = (O - N * 2 * (O * N)).normalize();
 
             bool shadow = false;
-            for (auto object : scene.objects)
+            for (auto& object : scene.objects)
             {
                 auto rec_s = object->hit({rec.p + N * EPS, L}, 0.0, INF);
                 if (rec_s.hit &&
-                    rec.o != object &&
+                    rec.o != object.get() &&
                     (rec.p - rec_s.p).norm() < (l->position - rec.p).norm())
                 {
                     shadow = true;
@@ -132,7 +121,7 @@ Color cast_ray(Ray ray, double t_min, double t_max, Scene scene,
     }
 }
 
-Image generate_image(Camera cam, Scene scene, Image* background = nullptr)
+Image generate_image(Camera& cam, Scene& scene, std::shared_ptr<Image> background = nullptr)
 {
     Image img = Image(cam.w_res, cam.h_res);
 
@@ -144,7 +133,13 @@ Image generate_image(Camera cam, Scene scene, Image* background = nullptr)
             Color color = cast_ray(ray, 0.0, INF, scene, background);
             img.set_pixel(x, y, color);
         }
+
+        if (_DEBUG)
+            std::cout << "Line " << y << " done.     \r";
     }
+
+    if (_DEBUG)
+        std::cout << std::endl;
 
     return img;
 }
@@ -155,29 +150,21 @@ int main(int argc, char **argv)
 
     auto camera = Camera(
         Point3(0.0, -10.0, 0.0), Point3(0.0, 0.0, 0.0),
-        M_PI / 3.0, M_PI / 4.0, 1.0, 600
+        M_PI / 3.0, M_PI / 4.0, 1.0, 1920
     );
 
-    auto stars_tex = Image("texture/stars.ppm");
-    auto earth_tex = Image("texture/earth.ppm");
-    auto moon_tex = Image("texture/moon.ppm");
+    auto stars_tex = std::make_shared<Image>("texture/stars.ppm");
+    auto earth_tex = std::make_shared<Image>("texture/earth.ppm");
+    auto moon_tex = std::make_shared<Image>("texture/moon.ppm");
 
-    auto earth_mat = ImageTexture(earth_tex, 1.0, 0.0, 10.0);
-    auto moon_mat = ImageTexture(moon_tex, 1.0, 0.0, 10.0);
+    auto earth_mat = std::make_shared<ImageTexture>(earth_tex, 1.0, 0.0, 10.0);
+    auto moon_mat = std::make_shared<ImageTexture>(moon_tex, 1.0, 0.0, 10.0);
 
-    Sphere earth = Sphere(Point3(0.0, 0.0, 0.0), 1.0, &earth_mat);
-    Sphere moon = Sphere(Point3(-1.0, -1.0, 0.0), 1700.0/6400.0, &moon_mat);
+    scene.add_object(std::make_unique<Sphere>(Point3(0.0, 0.0, 0.0), 1.0, earth_mat));
+    scene.add_object(std::make_unique<Sphere>(Point3(-1.0, -1.0, 0.0), 1700.0/6400.0, moon_mat));
 
-    scene.add_object(&earth);
-    scene.add_object(&moon);
+    scene.add_light(std::make_unique<PointLight>(Point3(15.0, -15.0, 0.0), WHITE, 1.0));
 
-    PointLight l = PointLight(Point3(15.0, -15.0, 0.0), WHITE, 1.0);
-
-    scene.add_light(&l);
-
-    Image img = generate_image(camera, scene, &stars_tex);
-
-    img.to_ppm("result.ppm");
-
+    generate_image(camera, scene, stars_tex).to_ppm("result.ppm");
     return 0;
 }

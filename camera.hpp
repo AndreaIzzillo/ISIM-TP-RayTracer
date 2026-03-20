@@ -3,13 +3,13 @@
 #include <cmath>
 
 #include "geometry.hpp"
-#include "ray.hpp"
 
 namespace RayTracer
 {
     class Camera
     {
     public:
+        /* Camera init points */
         Point3 C;
         Point3 P;
 
@@ -18,24 +18,20 @@ namespace RayTracer
         Vector3 right;
         Vector3 up;
 
-        /* Viewport definition */
+        /* Viewport parameters */
+        Point3 viewport;
         double alpha;
         double beta;
         double d;
-
         double width;
         double height;
         double aspect_ratio;
 
-        Point3 viewport;
-
-        /* Pixels */
+        /* Pixel grid */
         unsigned w_res;
         unsigned h_res;
-
         double pixel_width;
         double pixel_height;
-
         Vector3 w_step;
         Vector3 h_step;
 

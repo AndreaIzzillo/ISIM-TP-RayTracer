@@ -4,10 +4,6 @@
 
 #include "geometry.hpp"
 #include "material.hpp"
-#include "ray.hpp"
-
-#define EPS 0.0001
-#define INF 1000.0
 
 namespace RayTracer
 {
@@ -22,7 +18,8 @@ namespace RayTracer
     class Object
     {
     public:
-        TextureMaterial* material;
+        std::shared_ptr<TextureMaterial> material;
+        virtual ~Object() = default;
 
     public:
         virtual HitRecord hit(Ray ray, double t_min, double t_max) = 0;
@@ -37,11 +34,12 @@ namespace RayTracer
         double radius;
 
         Sphere() = default;
-        Sphere(Point3 center, double radius, TextureMaterial* mat)
+        Sphere(Point3 center, double radius, std::shared_ptr<TextureMaterial> mat)
             : center(center), radius(radius)
         {
             material = mat;
         }
+        ~Sphere() = default;
 
     public:
         HitRecord hit(Ray ray, double t_min, double t_max) override
@@ -87,7 +85,7 @@ namespace RayTracer
         }
 
     private:
-        PixelLoc mapper(Point3 p)
+        Pixel mapper(Point3 p)
         {
             Vector3 n = normal(p);
 
@@ -104,12 +102,12 @@ namespace RayTracer
             if (longitude > 1.0) longitude -= 1.0;
 
             unsigned x = static_cast<unsigned>(
-                    longitude * (dynamic_cast<ImageTexture*>(material))->texture.width);
+                    longitude * (dynamic_cast<ImageTexture*>(material.get()))->texture->width);
             unsigned y = static_cast<unsigned>(
-                    latitude * (dynamic_cast<ImageTexture*>(material))->texture.height);
+                    latitude * (dynamic_cast<ImageTexture*>(material.get()))->texture->height);
 
 
-            return PixelLoc{x, y};
+            return Pixel{x, y};
         }
     };
 }

@@ -2,6 +2,14 @@
 
 #include <ostream>
 
+#define WHITE Color(1.0, 1.0, 1.0)
+#define RED Color(1.0, 0.0, 0.0)
+#define GREEN Color(0.0, 1.0, 0.0)
+#define BLUE Color(0.0, 0.0, 1.0)
+#define CYAN Color(0.0, 1.0, 1.0)
+#define MAGENTA Color(1.0, 0.0, 1.0)
+#define YELLOW Color(1.0, 1.0, 0.0)
+
 namespace RayTracer
 {
     class Color
