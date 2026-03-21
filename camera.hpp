@@ -34,7 +34,8 @@ namespace RayTracer
         double pixel_height;
         Vector3 w_step;
         Vector3 h_step;
-
+    
+    public:
         Camera(Point3 center, Point3 point_at,
                double horizontal_fov, double vertical_fov, double focal_dist,
                unsigned horizontal_resolution)
@@ -63,6 +64,7 @@ namespace RayTracer
         }
 
     public:
+        /* Utilities */
         Ray get_ray(unsigned x, unsigned y)
         {
             auto p = viewport;
@@ -74,6 +76,13 @@ namespace RayTracer
             p = p + h_step * y;
 
             return {C, p - C};
+        }
+
+        /* Update parameters */
+        void set_focal_distance(double v)
+        {
+            d = v;
+            viewport = C + front * d + up * (height / 2) - right * (width / 2);
         }
     };
 }

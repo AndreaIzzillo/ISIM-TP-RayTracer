@@ -39,7 +39,6 @@ namespace RayTracer
         {
             material = mat;
         }
-        ~Sphere() = default;
 
     public:
         HitRecord hit(Ray ray, double t_min, double t_max) override

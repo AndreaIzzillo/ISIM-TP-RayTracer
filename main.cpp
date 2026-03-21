@@ -67,7 +67,7 @@ Color cast_ray(Ray ray, double t_min, double t_max, Scene& scene,
             if (shadow)
                 continue;
 
-            double fd = _FD ? 1 / (l->position - rec.p).norm() : 1.0;
+            double fd = _FD ? 1.0 / (l->position - rec.p).norm() : 1.0;
 
             if (mat.kd > 0.0)
             {
@@ -135,7 +135,7 @@ Image generate_image(Camera& cam, Scene& scene, std::shared_ptr<Image> backgroun
         }
 
         if (_DEBUG)
-            std::cout << "Line " << y << " done.     \r";
+            std::cout << "Line " << y << " done." << "    " << "\r";
     }
 
     if (_DEBUG)
