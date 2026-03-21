@@ -6,10 +6,6 @@
 #define EPS 0.00001
 #define INF 10000.0
 
-#define X Vector(1.0, 0.0, 0.0)
-#define Y Vector(0.0, 1.0, 0.0)
-#define Z Vector(0.0, 0.0, 1.0)
-
 namespace RayTracer
 {
     class Pixel

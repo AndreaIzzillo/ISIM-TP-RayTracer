@@ -116,7 +116,7 @@ Color cast_ray(Ray ray, double t_min, double t_max, Scene& scene,
         }
         else
         {
-            return Color(0.0, 0.4, 0.6);
+            return Color(0.0, 0.0, 0.0);
         }
     }
 }
@@ -150,21 +150,28 @@ int main(int argc, char **argv)
 
     auto camera = Camera(
         Point3(0.0, -10.0, 0.0), Point3(0.0, 0.0, 0.0),
-        M_PI / 3.0, M_PI / 4.0, 1.0, 1920
+        M_PI / 3.0, M_PI / 4.0, 1.0, 500
     );
 
-    auto stars_tex = std::make_shared<Image>("texture/stars.ppm");
-    auto earth_tex = std::make_shared<Image>("texture/earth.ppm");
-    auto moon_tex = std::make_shared<Image>("texture/moon.ppm");
-
-    auto earth_mat = std::make_shared<ImageTexture>(earth_tex, 1.0, 0.0, 10.0);
-    auto moon_mat = std::make_shared<ImageTexture>(moon_tex, 1.0, 0.0, 10.0);
-
-    scene.add_object(std::make_unique<Sphere>(Point3(0.0, 0.0, 0.0), 1.0, earth_mat));
-    scene.add_object(std::make_unique<Sphere>(Point3(-1.0, -1.0, 0.0), 1700.0/6400.0, moon_mat));
+    auto jupiter_tex = std::make_shared<Image>("texture/jupiter.ppm");
+    auto jupiter_mat = std::make_shared<ImageTexture>(jupiter_tex, 1.0, 0.0, 10.0);
+    auto jupiter = std::make_unique<Sphere>(Point3(0.0, 0.0, 0.0), 2.0, jupiter_mat);
+    auto jupiter_ptr = jupiter.get();
+    scene.add_object(std::move(jupiter));
 
     scene.add_light(std::make_unique<PointLight>(Point3(15.0, -15.0, 0.0), WHITE, 1.0));
 
-    generate_image(camera, scene, stars_tex).to_ppm("result.ppm");
+    jupiter_ptr->rotate(0.0, M_PI, M_PI);
+    jupiter_ptr->rotate(0.1, 0.1, 0.0);
+
+    for (unsigned i = 0; i < 60; i++)
+    {
+        std::string file = "test/frame_" + std::to_string(i) + ".ppm";
+        generate_image(camera, scene).to_ppm(file.c_str());
+        jupiter_ptr->rotate(0.0, 0.0, 0.05);
+    }
+
+    //generate_image(camera, scene).to_ppm("result.ppm");
+
     return 0;
 }
