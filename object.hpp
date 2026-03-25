@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <memory>
 
 #include "geometry.hpp"
 #include "material.hpp"
@@ -42,7 +43,7 @@ namespace RayTracer
             : center(center), radius(radius)
         {
             material = mat;
-        }
+        };
 
     public:
         HitRecord hit(Ray ray, double t_min, double t_max) override
@@ -86,7 +87,7 @@ namespace RayTracer
                     }
             );
         }
-    
+
     public:
         void rotate(double x, double y, double z)
         {
@@ -114,11 +115,13 @@ namespace RayTracer
             z0 = dir.z;
             dir.y = cx * y0 - sx * z0;
             dir.z = sx * y0 + cx * z0;
+
             // Y rotation
             x0 = dir.x;
             z0 = dir.z;
             dir.x = cy * x0 + sy * z0;
             dir.z = -sy * x0 + cy * z0;
+
             // Z rotation
             x0 = dir.x;
             y0 = dir.y;
@@ -137,7 +140,89 @@ namespace RayTracer
                     latitude * (dynamic_cast<ImageTexture*>(material.get()))->texture->height);
 
 
-            return Pixel{x, y};
+            return Pixel(x, y);
+        }
+    };
+
+    class Triangle : public Object
+    {
+    public:
+        Point3 a;
+        Point3 b;
+        Point3 c;
+
+        Triangle() = default;
+        Triangle(Point3 a, Point3 b, Point3 c,
+                 std::shared_ptr<TextureMaterial> mat)
+            : a(a), b(b), c(c)
+        {
+            material = mat;
+        };
+
+    public:
+        HitRecord hit(Ray ray, double t_min, double t_max) override
+        {
+            Vector3 oa = a - ray.origin;
+            Vector3 ob = b - ray.origin;
+            Vector3 oc = c - ray.origin;
+
+            double det = oa.x * (ob.y * oc.z - oc.y * ob.z) -
+                         oa.y * (ob.x * oc.z - ob.z * oc.x) +
+                         oa.z * (ob.x * oc.y - ob.y * oc.x);
+
+            double invdet = 1 / det;
+
+            Vector3 m0;
+            Vector3 m1;
+            Vector3 m2;
+
+            m0.x = (ob.y * oc.z - oc.y * ob.z) * invdet;
+            m0.y = (oa.z * oc.y - oa.y * oc.z) * invdet;
+            m0.z = (oa.y * ob.z - oa.z * ob.y) * invdet;
+            m1.x = (ob.z * oc.x - ob.x * oc.z) * invdet;
+            m1.y = (oa.x * oc.z - oa.z * oc.x) * invdet;
+            m1.z = (ob.x * oa.z - oa.x * ob.z) * invdet;
+            m2.x = (ob.x * oc.y - oc.x * ob.y) * invdet;
+            m2.y = (oc.x * oa.y - oa.x * oc.y) * invdet;
+            m2.z = (oa.x * ob.y - ob.x * oa.y) * invdet;
+
+            Vector3 param;
+            param.x = m0.x * ray.direction.x + m1.x * ray.direction.y + m2.x * ray.direction.z;
+            param.y = m0.y * ray.direction.x + m1.y * ray.direction.y + m2.y * ray.direction.z;
+            param.z = m0.z * ray.direction.x + m1.z * ray.direction.y + m2.z * ray.direction.z;
+
+            if (param.x < 0.0 || param.y < 0.0 || param.z < 0.0)
+                return {false, 0.0, Point3(), nullptr};
+
+            Vector3 og = (oa * param.x + ob * param.y + oc * param.z);
+            og = og / (param.x + param.y + param.z);
+
+            if (og.norm() < t_min || og.norm() > t_max)
+                return {false, 0.0, Point3(), nullptr};
+
+            return {true, og.norm(), ray.origin + og, this};
+        }
+
+        Vector3 normal(Point3 p) override
+        {
+            return (a-b)^(a-c);
+        }
+
+        MaterialInfo texture(Point3 p) override
+        {
+            return material->get_info(
+                    p,
+                    [this](Point3 p)
+                    {
+                        return this->mapper(p);
+                    }
+            );
+        }
+
+    private:
+        Pixel mapper(Point3 p)
+        {
+            return Pixel(0, 0);
         }
     };
 }

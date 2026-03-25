@@ -1,5 +1,6 @@
 #include <cmath>
 #include <iostream>
+#include <memory>
 
 #include "geometry.hpp"
 #include "color.hpp"
@@ -10,7 +11,7 @@
 #include "light.hpp"
 #include "camera.hpp"
 
-#define _FD false
+#define _FD true
 #define _DEBUG true
 
 using namespace RayTracer;
@@ -67,7 +68,7 @@ Color cast_ray(Ray ray, double t_min, double t_max, Scene& scene,
             if (shadow)
                 continue;
 
-            double fd = _FD ? 1.0 / (l->position - rec.p).norm() : 1.0;
+            double fd = _FD ? 1.0 / sqrt((l->position - rec.p).norm()) : 1.0;
 
             if (mat.kd > 0.0)
             {
@@ -116,7 +117,7 @@ Color cast_ray(Ray ray, double t_min, double t_max, Scene& scene,
         }
         else
         {
-            return Color(0.0, 0.0, 0.0);
+            return CYAN * 0.5;
         }
     }
 }
@@ -149,29 +150,36 @@ int main(int argc, char **argv)
     auto scene = Scene();
 
     auto camera = Camera(
-        Point3(0.0, -10.0, 0.0), Point3(0.0, 0.0, 0.0),
-        M_PI / 3.0, M_PI / 4.0, 1.0, 500
+        Point3(0.0, -2.0, 0.5), Point3(0.0, 0.0, 0.5),
+        M_PI / 3.0, M_PI / 4.0, 1.0, 1200
     );
 
-    auto jupiter_tex = std::make_shared<Image>("texture/jupiter.ppm");
-    auto jupiter_mat = std::make_shared<ImageTexture>(jupiter_tex, 1.0, 0.0, 10.0);
-    auto jupiter = std::make_unique<Sphere>(Point3(0.0, 0.0, 0.0), 2.0, jupiter_mat);
-    auto jupiter_ptr = jupiter.get();
-    scene.add_object(std::move(jupiter));
+    auto cyan = std::make_shared<UniformTexture>(CYAN, 1.0, 0.0, 10.0);
+    auto magenta = std::make_shared<UniformTexture>(MAGENTA, 1.0, 0.0, 10.0);
+    auto yellow = std::make_shared<UniformTexture>(YELLOW, 1.0, 0.0, 10.0);
 
-    scene.add_light(std::make_unique<PointLight>(Point3(15.0, -15.0, 0.0), WHITE, 1.0));
+    auto tr1 = std::make_unique<Triangle>(
+            Point3(-1.0, 0.0, 0.0),
+            Point3(1.0, 0.0, 0.0),
+            Point3(0.0, 0.0, 1.0),
+            cyan
+    );
+    auto tr2 = std::make_unique<Triangle>(
+            Point3(-1.0, 1.0, 0.0),
+            Point3(1.0, 1.0, 0.0),
+            Point3(0.0, 1.0, 1.0),
+            magenta
+    );
+    auto ground = std::make_unique<Sphere>(
+            Point3(0.0, 0.0, -4000.0), 4000.0, yellow
+    );
 
-    jupiter_ptr->rotate(0.0, M_PI, M_PI);
-    jupiter_ptr->rotate(0.1, 0.1, 0.0);
+    scene.add_object(std::move(tr1));
+    scene.add_object(std::move(tr2));
+    scene.add_object(std::move(ground));
+    scene.add_light(std::make_unique<PointLight>(Point3(0.0, -1.5, 0.5), WHITE, 1.0));
 
-    for (unsigned i = 0; i < 60; i++)
-    {
-        std::string file = "test/frame_" + std::to_string(i) + ".ppm";
-        generate_image(camera, scene).to_ppm(file.c_str());
-        jupiter_ptr->rotate(0.0, 0.0, 0.05);
-    }
-
-    //generate_image(camera, scene).to_ppm("result.ppm");
+    generate_image(camera, scene).to_ppm("result.ppm");
 
     return 0;
 }

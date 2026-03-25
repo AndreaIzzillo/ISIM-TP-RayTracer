@@ -20,7 +20,7 @@ namespace RayTracer
     {
     public:
         MaterialInfo info;
-    
+
     public:
         virtual MaterialInfo get_info(
                 Point3& p,
