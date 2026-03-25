@@ -197,10 +197,12 @@ namespace RayTracer
             Vector3 og = (oa * param.x + ob * param.y + oc * param.z);
             og = og / (param.x + param.y + param.z);
 
-            if (og.norm() < t_min || og.norm() > t_max)
+            double t = og.x / ray.direction.x;
+
+            if (t < t_min || t > t_max)
                 return {false, 0.0, Point3(), nullptr};
 
-            return {true, og.norm(), ray.origin + og, this};
+            return {true, t, ray.origin + ray.direction * t, this};
         }
 
         Vector3 normal(Point3 p) override

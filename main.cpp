@@ -150,7 +150,7 @@ int main(int argc, char **argv)
     auto scene = Scene();
 
     auto camera = Camera(
-        Point3(0.0, -2.0, 0.5), Point3(0.0, 0.0, 0.5),
+        Point3(2.0, -2.0, 0.5), Point3(0.0, 0.0, 0.5),
         M_PI / 3.0, M_PI / 4.0, 1.0, 1200
     );
 
@@ -171,13 +171,13 @@ int main(int argc, char **argv)
             magenta
     );
     auto ground = std::make_unique<Sphere>(
-            Point3(0.0, 0.0, -4000.0), 4000.0, yellow
+            Point3(0.0, 0.0, -100.0), 100.00, yellow
     );
 
     scene.add_object(std::move(tr1));
     scene.add_object(std::move(tr2));
     scene.add_object(std::move(ground));
-    scene.add_light(std::make_unique<PointLight>(Point3(0.0, -1.5, 0.5), WHITE, 1.0));
+    scene.add_light(std::make_unique<PointLight>(Point3(1.5, -1.5, 0.5), WHITE, 1.0));
 
     generate_image(camera, scene).to_ppm("result.ppm");
 

@@ -121,7 +121,7 @@ namespace RayTracer
 
         Point3 operator+(const Point3& p)
         {
-            return Point3(x + p.x, y + p.x, z + p.z);
+            return Point3(x + p.x, y + p.y, z + p.z);
         }
 
         Vector3 operator-(const Point3& p)
