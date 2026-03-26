@@ -150,34 +150,42 @@ int main(int argc, char **argv)
     auto scene = Scene();
 
     auto camera = Camera(
-        Point3(2.0, -2.0, 0.5), Point3(0.0, 0.0, 0.5),
-        M_PI / 3.0, M_PI / 4.0, 1.0, 1200
+        Point3(0.0, -3.0, 1.0), Point3(0.0, 0.0, 0.5),
+        M_PI / 3.0, M_PI / 4.0, 1.0, 500
     );
 
-    auto cyan = std::make_shared<UniformTexture>(CYAN, 1.0, 0.0, 10.0);
-    auto magenta = std::make_shared<UniformTexture>(MAGENTA, 1.0, 0.0, 10.0);
-    auto yellow = std::make_shared<UniformTexture>(YELLOW, 1.0, 0.0, 10.0);
+    auto tex = std::make_shared<Image>("texture/jupiter.ppm");
+
+    auto cyan = std::make_shared<UniformTexture>(BLUE, 0.0, 1.0, 10.0);
+    auto magenta = std::make_shared<UniformTexture>(MAGENTA, 0.0, 1.0, 10.0);
+    auto boule = std::make_shared<UniformTexture>(RED, 1.0, 0.0, 10.0);
+    auto white = std::make_shared<UniformTexture>(WHITE, 0.9, 0.1, 10.0);
+    auto chiant = std::make_shared<ImageTexture>(tex, 1.0, 0.0, 10.0);
 
     auto tr1 = std::make_unique<Triangle>(
-            Point3(-1.0, 0.0, 0.0),
-            Point3(1.0, 0.0, 0.0),
-            Point3(0.0, 0.0, 1.0),
+            Point3(-1.5, 1.0, 0.0),
+            Point3(-0.5, 2.0, 0.0),
+            Point3(-1.0, 1.5, 1.0),
             cyan
     );
     auto tr2 = std::make_unique<Triangle>(
-            Point3(-1.0, 1.0, 0.0),
-            Point3(1.0, 1.0, 0.0),
-            Point3(0.0, 1.0, 1.0),
+            Point3(0.5, 2.0, 0.0),
+            Point3(1.5, 1.0, 0.0),
+            Point3(1.0, 1.5, 1.0),
             magenta
     );
+    auto cool = std::make_unique<Sphere>(
+            Point3(0.0, 1.0, 0.3), 0.3, chiant
+    );
     auto ground = std::make_unique<Sphere>(
-            Point3(0.0, 0.0, -100.0), 100.00, yellow
+            Point3(0.0, 0.0, -10000.0), 10000.00, white
     );
 
     scene.add_object(std::move(tr1));
     scene.add_object(std::move(tr2));
+    scene.add_object(std::move(cool));
     scene.add_object(std::move(ground));
-    scene.add_light(std::make_unique<PointLight>(Point3(1.5, -1.5, 0.5), WHITE, 1.0));
+    scene.add_light(std::make_unique<PointLight>(Point3(0.0, 0.0, 1.0), WHITE, 1.0));
 
     generate_image(camera, scene).to_ppm("result.ppm");
 
