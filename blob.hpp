@@ -4,7 +4,5 @@ namespace RayTracer
 {
     class Blob
     {
-    public:
-
     };
 }

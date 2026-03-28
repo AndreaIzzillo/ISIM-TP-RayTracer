@@ -135,9 +135,11 @@ namespace RayTracer
             if (longitude > 1.0) longitude -= 1.0;
 
             unsigned x = static_cast<unsigned>(
-                    longitude * (dynamic_cast<ImageTexture*>(material.get()))->texture->width);
+                    longitude * (dynamic_cast<ImageTexture*>(material.get()))->texture->width
+            );
             unsigned y = static_cast<unsigned>(
-                    latitude * (dynamic_cast<ImageTexture*>(material.get()))->texture->height);
+                    latitude * (dynamic_cast<ImageTexture*>(material.get()))->texture->height
+            );
 
 
             return Pixel(x, y);

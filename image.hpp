@@ -70,6 +70,7 @@ namespace RayTracer
                 for (int i = 0; i < width; i++)
                 {
                     auto c = pixels[width * j + i];
+                    c.clamp();
                     auto r = static_cast<int>(c.r * 255.999);
                     auto g = static_cast<int>(c.g * 255.999);
                     auto b = static_cast<int>(c.b * 255.999);

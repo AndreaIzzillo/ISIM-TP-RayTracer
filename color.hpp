@@ -3,6 +3,7 @@
 #include <ostream>
 
 #define WHITE Color(1.0, 1.0, 1.0)
+#define BLACK Color(0.0, 0.0, 0.0)
 #define RED Color(1.0, 0.0, 0.0)
 #define GREEN Color(0.0, 1.0, 0.0)
 #define BLUE Color(0.0, 0.0, 1.0)
@@ -18,38 +19,31 @@ namespace RayTracer
         double r, g, b;
 
         Color(): r(0.0), g(0.0), b(0.0) {};
-        Color(double r, double g, double b): r(r), g(g), b(b)
-        {
-            span();
-        };
+        Color(double r, double g, double b): r(r), g(g), b(b) {};
+        Color(int r, int g, int b)
+            : r(static_cast<double>(r) / 255.0)
+            , g(static_cast<double>(g) / 255.0)
+            , b(static_cast<double>(b) / 255.0) {};
 
     public:
         Color operator*(const double& l) const
         {
-            auto res = Color(r * l, g * l, b * l);
-            res.span();
-            return res;
+            return Color(r * l, g * l, b * l);
         }
 
         Color operator+(const Color& c) const
         {
-            auto res = Color(r + c.r, g + c.g, b + c.b);
-            res.span();
-            return res;
+            return Color(r + c.r, g + c.g, b + c.b);
         }
 
         Color operator-(const Color& c) const
         {
-            auto res = Color(r - c.r, g - c.g, b - c.b);
-            res.span();
-            return res;
+            return Color(r - c.r, g - c.g, b - c.b);
         }
 
         Color operator*(const Color& c) const
         {
-            auto res = Color(r * c.r, g * c.g, b * c.b);
-            res.span();
-            return res;
+            return Color(r * c.r, g * c.g, b * c.b);
         }
 
         friend std::ostream& operator<<(std::ostream& out, Color& c)
@@ -57,8 +51,8 @@ namespace RayTracer
             return out << "C(" << c.r << "," << c.g << "," << c.b << ")";
         }
 
-    private:
-        void span()
+    public:
+        void clamp()
         {
             if (r < 0.0) r = 0.0;
             if (r > 1.0) r = 1.0;

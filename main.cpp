@@ -45,14 +45,17 @@ Color cast_ray(Ray ray, double t_min, double t_max, Scene& scene,
         auto Is = Color(0.0, 0.0, 0.0); // Specular
         auto Ir = Color(0.0, 0.0, 0.0); // Reflexion
 
+        auto O = ray.direction;
+        auto N = hit_object->normal(rec.p);
+        auto S = (O - N * 2 * (O * N)).normalize();
+
         for (auto& l : scene.lights)
         {
-            auto O = ray.direction;
-            auto N = hit_object->normal(rec.p);
             auto L = (l->position - rec.p).normalize();
-            auto S = (O - N * 2 * (O * N)).normalize();
 
-            bool shadow = false;
+            double fd = _FD ? 1.0 / (l->position - rec.p).norm() : 1.0;
+
+            bool is_shadow = false;
             for (auto& object : scene.objects)
             {
                 auto rec_s = object->hit({rec.p + N * EPS, L}, 0.0, INF);
@@ -60,15 +63,13 @@ Color cast_ray(Ray ray, double t_min, double t_max, Scene& scene,
                     rec.o != object.get() &&
                     (rec.p - rec_s.p).norm() < (l->position - rec.p).norm())
                 {
-                    shadow = true;
+                    is_shadow = true;
                     break;
                 }
             }
 
-            if (shadow)
+            if (is_shadow)
                 continue;
-
-            double fd = _FD ? 1.0 / sqrt((l->position - rec.p).norm()) : 1.0;
 
             if (mat.kd > 0.0)
             {
@@ -78,15 +79,18 @@ Color cast_ray(Ray ray, double t_min, double t_max, Scene& scene,
             if (mat.ks > 0.0)
             {
                 Is = Is + l->color * mat.ks * pow(std::max((S * L), 0.0), mat.ns) * l->intensity * fd;
-
-                if (it > 0)
-                {
-                    Ir = cast_ray({rec.p + N * EPS, S}, 0.0, INF, scene, background, it - 1) * mat.ks;
-                }
             }
-
-            result = result + Id + Is + Ir;
         }
+
+        if (mat.ks > 0.0)
+        {
+            if (it > 0)
+            {
+                Ir = Ir + cast_ray({rec.p + N * EPS, S}, 0.0, INF, scene, background, it - 1) * mat.ks;
+            }
+        }
+
+        result = result + Id + Is + Ir;
 
         return result;
     }
@@ -117,7 +121,7 @@ Color cast_ray(Ray ray, double t_min, double t_max, Scene& scene,
         }
         else
         {
-            return CYAN * 0.5;
+            return Color(135, 206, 235);
         }
     }
 }
@@ -150,11 +154,11 @@ int main(int argc, char **argv)
     auto scene = Scene();
 
     auto camera = Camera(
-        Point3(0.0, -3.0, 1.0), Point3(0.0, 0.0, 0.5),
-        M_PI / 3.0, M_PI / 4.0, 1.0, 500
+        Point3(0.0, -3.5, 1.0), Point3(0.0, 0.0, 0.5),
+        M_PI / 3.0, M_PI / 4.0, 1.0, 2000
     );
 
-    auto tex = std::make_shared<Image>("texture/jupiter.ppm");
+    auto tex = std::make_shared<Image>("texture/moon.ppm");
 
     auto cyan = std::make_shared<UniformTexture>(BLUE, 0.0, 1.0, 10.0);
     auto magenta = std::make_shared<UniformTexture>(MAGENTA, 0.0, 1.0, 10.0);
@@ -181,11 +185,26 @@ int main(int argc, char **argv)
             Point3(0.0, 0.0, -10000.0), 10000.00, white
     );
 
+    auto blorg = cool.get();
+
     scene.add_object(std::move(tr1));
     scene.add_object(std::move(tr2));
     scene.add_object(std::move(cool));
     scene.add_object(std::move(ground));
-    scene.add_light(std::make_unique<PointLight>(Point3(0.0, 0.0, 1.0), WHITE, 1.0));
+
+    blorg->rotate(M_PI, 0.0, 0.0);
+
+    //scene.add_light(std::make_unique<PointLight>(Point3(0.0, 0.0, 1.0), WHITE, 1.0));
+    scene.add_light(std::make_unique<PointLight>(Point3(-1.0, 0.0, 1.0), RED, 1.0));
+    scene.add_light(std::make_unique<PointLight>(Point3(0.0, 0.0, 1.0), GREEN, 1.0));
+    scene.add_light(std::make_unique<PointLight>(Point3(1.0, 0.0, 1.0), BLUE, 1.0));
+    //scene.add_light(std::make_unique<PointLight>(Point3(0.0, 10.0, 1000.0), WHITE, 50.0));
+    // scene.add_light(std::make_unique<PointLight>(Point3(-1.25, -1.0, 0.01), RED, 0.1));
+    // scene.add_light(std::make_unique<PointLight>(Point3(-0.75, -1.0, 0.01), GREEN, 0.1));
+    // scene.add_light(std::make_unique<PointLight>(Point3(-0.25, -1.0, 0.01), BLUE, 0.1));
+    // scene.add_light(std::make_unique<PointLight>(Point3(0.25, -1.0, 0.01), CYAN, 0.1));
+    // scene.add_light(std::make_unique<PointLight>(Point3(0.75, -1.0, 0.01), MAGENTA, 0.1));
+    // scene.add_light(std::make_unique<PointLight>(Point3(1.25, -1.0, 0.01), YELLOW, 0.1));
 
     generate_image(camera, scene).to_ppm("result.ppm");
 
