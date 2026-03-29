@@ -164,7 +164,7 @@ int main(int argc, char **argv)
 
     auto camera = Camera(
         Point3(0.0, -4.0, 1.0), Point3(0.0, 0.0, 1.0),
-        M_PI / 3.0, M_PI / 4.0, 1.0, 300
+        M_PI / 3.0, M_PI / 4.0, 1.0, 1000
     );
 
     auto white = std::make_shared<UniformTexture>(WHITE * 0.95, 1.0, 0.0, 10.0);

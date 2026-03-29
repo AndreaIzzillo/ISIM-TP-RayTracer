@@ -36,14 +36,16 @@ namespace RayTracer
     public:
         Point3 center;
         double radius;
-
-        double x_rot = 0.0;
-        double y_rot = 0.0;
-        double z_rot = 0.0;
+        Vector3 rotation;
 
         Sphere() = default;
         Sphere(Point3 center, double radius, std::shared_ptr<TextureMaterial> mat)
             : center(center), radius(radius)
+        {
+            material = mat;
+        };
+        Sphere(Point3 center, double radius, Vector3 rotation, std::shared_ptr<TextureMaterial> mat)
+            : center(center), radius(radius), rotation(rotation)
         {
             material = mat;
         };
@@ -92,12 +94,12 @@ namespace RayTracer
         }
 
     public:
-        void rotate(double rx, double ry, double rz)
+        void rotate(Vector3 r)
         {
             double pi2 = 2.0 * M_PI;
-            x_rot = std::fmod(x_rot + rx, pi2);
-            y_rot = std::fmod(y_rot + ry, pi2);
-            z_rot = std::fmod(z_rot + rz, pi2);
+            rotation.x = std::fmod(rotation.x + r.x, pi2);
+            rotation.y = std::fmod(rotation.y + r.y, pi2);
+            rotation.z = std::fmod(rotation.z + r.z, pi2);
         }
 
     private:
@@ -105,32 +107,13 @@ namespace RayTracer
         {
             Vector3 dir = (p - center).normalize();
 
-            double cx = std::cos(x_rot);
-            double sx = std::sin(x_rot);
-            double cy = std::cos(y_rot);
-            double sy = std::sin(y_rot);
-            double cz = std::cos(z_rot);
-            double sz = std::sin(z_rot);
+            auto rx = RotXMatrix(rotation.x);
+            auto ry = RotYMatrix(rotation.y);
+            auto rz = RotZMatrix(rotation.z);
 
-            double x0, y0, z0;
-
-            // X rotation
-            y0 = dir.y;
-            z0 = dir.z;
-            dir.y = cx * y0 - sx * z0;
-            dir.z = sx * y0 + cx * z0;
-
-            // Y rotation
-            x0 = dir.x;
-            z0 = dir.z;
-            dir.x = cy * x0 + sy * z0;
-            dir.z = -sy * x0 + cy * z0;
-
-            // Z rotation
-            x0 = dir.x;
-            y0 = dir.y;
-            dir.x = cz * x0 - sz * y0;
-            dir.y = sz * x0 + cz * y0;
+            dir = rx * dir;
+            dir = ry * dir;
+            dir = rz * dir;
 
             double longitude = 0.5 - atan2(dir.y, dir.x) / (2.0 * M_PI);
             double latitude = 0.5 + asin(dir.z) / (M_PI);
@@ -171,30 +154,18 @@ namespace RayTracer
             Vector3 ob = b - ray.origin;
             Vector3 oc = c - ray.origin;
 
-            double det = oa.x * (ob.y * oc.z - oc.y * ob.z) -
-                         oa.y * (ob.x * oc.z - ob.z * oc.x) +
-                         oa.z * (ob.x * oc.y - ob.y * oc.x);
+            Matrix33 m = Matrix33(oa, ob, oc);
 
+            double det = m.determinant();
             double invdet = 1 / det;
 
-            Vector3 m0;
-            Vector3 m1;
-            Vector3 m2;
+            Matrix33 minv = m.inverse();
 
-            m0.x = (ob.y * oc.z - oc.y * ob.z) * invdet;
-            m0.y = (oa.z * oc.y - oa.y * oc.z) * invdet;
-            m0.z = (oa.y * ob.z - oa.z * ob.y) * invdet;
-            m1.x = (ob.z * oc.x - ob.x * oc.z) * invdet;
-            m1.y = (oa.x * oc.z - oa.z * oc.x) * invdet;
-            m1.z = (ob.x * oa.z - oa.x * ob.z) * invdet;
-            m2.x = (ob.x * oc.y - oc.x * ob.y) * invdet;
-            m2.y = (oc.x * oa.y - oa.x * oc.y) * invdet;
-            m2.z = (oa.x * ob.y - ob.x * oa.y) * invdet;
-
-            Vector3 param;
-            param.x = m0.x * ray.direction.x + m1.x * ray.direction.y + m2.x * ray.direction.z;
-            param.y = m0.y * ray.direction.x + m1.y * ray.direction.y + m2.y * ray.direction.z;
-            param.z = m0.z * ray.direction.x + m1.z * ray.direction.y + m2.z * ray.direction.z;
+            Vector3 param = Vector3(
+                minv(0, 0) * ray.direction.x + minv(0, 1) * ray.direction.y + minv(0, 2) * ray.direction.z,
+                minv(1, 0) * ray.direction.x + minv(1, 1) * ray.direction.y + minv(1, 2) * ray.direction.z,
+                minv(2, 0) * ray.direction.x + minv(2, 1) * ray.direction.y + minv(2, 2) * ray.direction.z
+            );
 
             if (param.x < 0.0 || param.y < 0.0 || param.z < 0.0)
                 return {false};
@@ -236,16 +207,14 @@ namespace RayTracer
     class Mesh : public Object
     {
     public:
-        Point3 position;
         std::vector<std::unique_ptr<Triangle>> triangles;
 
-        double x_rot = 0.0;
-        double y_rot = 0.0;
-        double z_rot = 0.0;
+        Point3 position;
+        Vector3 rotation;
 
         Mesh() = default;
-        Mesh(const char *obj_file, Point3 pos, Vector3 rot, std::shared_ptr<TextureMaterial> mat)
-            : position(pos), x_rot(rot.x), y_rot(rot.y), z_rot(rot.z)
+        Mesh(const char *obj_file, Point3 position, Vector3 rotation, std::shared_ptr<TextureMaterial> mat)
+            : position(position), rotation(rotation)
         {
             material = mat;
 
@@ -357,68 +326,21 @@ namespace RayTracer
                             material
                         ));
 
-                        double cx = std::cos(x_rot);
-                        double sx = std::sin(x_rot);
-                        double cy = std::cos(y_rot);
-                        double sy = std::sin(y_rot);
-                        double cz = std::cos(z_rot);
-                        double sz = std::sin(z_rot);
+                        auto rx = RotXMatrix(rotation.x);
+                        auto ry = RotYMatrix(rotation.y);
+                        auto rz = RotZMatrix(rotation.z);
 
-                        double x0, y0, z0;
+                        tr->a = rx * tr->a;
+                        tr->b = rx * tr->b;
+                        tr->c = rx * tr->c;
 
-                        // X rotation
-                        y0 = tr->a.y;
-                        z0 = tr->a.z;
-                        tr->a.y = cx * y0 - sx * z0;
-                        tr->a.z = sx * y0 + cx * z0;
+                        tr->a = ry * tr->a;
+                        tr->b = ry * tr->b;
+                        tr->c = ry * tr->c;
 
-                        // Y rotation
-                        x0 = tr->a.x;
-                        z0 = tr->a.z;
-                        tr->a.x = cy * x0 + sy * z0;
-                        tr->a.z = -sy * x0 + cy * z0;
-
-                        // Z rotation
-                        x0 = tr->a.x;
-                        y0 = tr->a.y;
-                        tr->a.x = cz * x0 - sz * y0;
-                        tr->a.y = sz * x0 + cz * y0;
-
-                        // X rotation
-                        y0 = tr->b.y;
-                        z0 = tr->b.z;
-                        tr->b.y = cx * y0 - sx * z0;
-                        tr->b.z = sx * y0 + cx * z0;
-
-                        // Y rotation
-                        x0 = tr->b.x;
-                        z0 = tr->b.z;
-                        tr->b.x = cy * x0 + sy * z0;
-                        tr->b.z = -sy * x0 + cy * z0;
-
-                        // Z rotation
-                        x0 = tr->b.x;
-                        y0 = tr->b.y;
-                        tr->b.x = cz * x0 - sz * y0;
-                        tr->b.y = sz * x0 + cz * y0;
-
-                        // X rotation
-                        y0 = tr->c.y;
-                        z0 = tr->c.z;
-                        tr->c.y = cx * y0 - sx * z0;
-                        tr->c.z = sx * y0 + cx * z0;
-
-                        // Y rotation
-                        x0 = tr->c.x;
-                        z0 = tr->c.z;
-                        tr->c.x = cy * x0 + sy * z0;
-                        tr->c.z = -sy * x0 + cy * z0;
-
-                        // Z rotation
-                        x0 = tr->c.x;
-                        y0 = tr->c.y;
-                        tr->c.x = cz * x0 - sz * y0;
-                        tr->c.y = sz * x0 + cz * y0;
+                        tr->a = rz * tr->a;
+                        tr->b = rz * tr->b;
+                        tr->c = rz * tr->c;
 
                         tr->a = tr->a + position;
                         tr->b = tr->b + position;
@@ -451,12 +373,12 @@ namespace RayTracer
         }
     
     public:
-        void rotate(double rx, double ry, double rz)
+        void rotate(Vector3 r)
         {
             double pi2 = 2.0 * M_PI;
-            x_rot = std::fmod(x_rot + rx, pi2);
-            y_rot = std::fmod(y_rot + ry, pi2);
-            z_rot = std::fmod(z_rot + rz, pi2);
+            rotation.x = std::fmod(rotation.x + r.x, pi2);
+            rotation.y = std::fmod(rotation.y + r.y, pi2);
+            rotation.z = std::fmod(rotation.z + r.z, pi2);
         }
         
     private:
