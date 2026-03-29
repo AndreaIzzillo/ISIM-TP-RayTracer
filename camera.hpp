@@ -43,7 +43,7 @@ namespace RayTracer
               alpha(horizontal_fov), beta(vertical_fov), d(focal_dist)
         {
             front = (P - C).normalize();
-            right = (front ^ Vector3(0.0, 0.0, 1.0)).normalize();
+            right = (front ^ UP).normalize();
             up = (right ^ front).normalize();
 
             width = 2.0 * d * tan(alpha / 2.0);
@@ -75,7 +75,7 @@ namespace RayTracer
             p = p + w_step * x;
             p = p + h_step * y;
 
-            return {C, p - C};
+            return {C, (p - C)};
         }
 
         /* Update parameters */

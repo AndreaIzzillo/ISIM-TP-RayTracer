@@ -12,14 +12,13 @@
 #include "camera.hpp"
 
 #define _FD true
-#define _DEBUG true
 
 using namespace RayTracer;
 
 Color cast_ray(Ray ray, double t_min, double t_max, Scene& scene,
                std::shared_ptr<Image> background = nullptr, int it = 5)
 {
-    HitRecord rec = {false, 0.0, Point3(), nullptr};
+    HitRecord rec = {false};
     Object* hit_object = nullptr;
     double closest = t_max;
 
@@ -37,7 +36,7 @@ Color cast_ray(Ray ray, double t_min, double t_max, Scene& scene,
 
     if (rec.hit)
     {
-        const auto& mat = hit_object->texture(rec.p);
+        const auto& mat = rec.mat;
 
         auto result = Color(0.0, 0.0, 0.0);
 
@@ -46,7 +45,7 @@ Color cast_ray(Ray ray, double t_min, double t_max, Scene& scene,
         auto Ir = Color(0.0, 0.0, 0.0); // Reflexion
 
         auto O = ray.direction;
-        auto N = hit_object->normal(rec.p);
+        auto N = rec.n;
         auto S = (O - N * 2 * (O * N)).normalize();
 
         for (auto& l : scene.lights)
@@ -130,6 +129,9 @@ Image generate_image(Camera& cam, Scene& scene, std::shared_ptr<Image> backgroun
 {
     Image img = Image(cam.w_res, cam.h_res);
 
+    int loading_counter = 0;
+
+    #pragma omp parallel for
     for (unsigned y = 0; y < cam.h_res; y++)
     {
         for (unsigned x = 0; x < cam.w_res; x++)
@@ -139,12 +141,19 @@ Image generate_image(Camera& cam, Scene& scene, std::shared_ptr<Image> backgroun
             img.set_pixel(x, y, color);
         }
 
-        if (_DEBUG)
-            std::cout << "Line " << y << " done." << "    " << "\r" << std::flush;
+        loading_counter++;
+
+        /* Loading Display */
+        constexpr int loading_size = 20;
+        int progress = static_cast<int>(loading_size * loading_counter / (cam.h_res - 1));
+        for (int i = 0; i < progress; i++) std::cout << "▓";
+        for (int i = 0; i < loading_size - progress; i++) std::cout << "░";
+        std::cout << " " << loading_counter << "/" << cam.h_res
+                  << " done." << "          " << "\r"
+                  << std::flush;
     }
 
-    if (_DEBUG)
-        std::cout << std::endl;
+    std::cout << "\nSUPRA RTX DONE." << std::endl;
 
     return img;
 }
@@ -154,21 +163,37 @@ int main(int argc, char **argv)
     auto scene = Scene();
 
     auto camera = Camera(
-        Point3(0.0, -3.5, 1.0), Point3(0.0, 0.0, 0.5),
-        M_PI / 3.0, M_PI / 4.0, 1.0, 2000
+        Point3(0.0, -4.0, 1.0), Point3(0.0, 0.0, 1.0),
+        M_PI / 3.0, M_PI / 4.0, 1.0, 300
     );
 
-    auto gray = std::make_shared<UniformTexture>(WHITE * 0.8, 0.9, 0.1, 10.0);
+    auto white = std::make_shared<UniformTexture>(WHITE * 0.95, 1.0, 0.0, 10.0);
+    auto cyan = std::make_shared<UniformTexture>(CYAN, 1.0, 0.0, 10.0);
 
     auto ground = std::make_unique<Sphere>(
-            Point3(0.0, 0.0, -1000.0), 1000.00, gray
+            Point3(0.0, 0.0, -100.0), 100.0, white
     );
 
-    scene.add_object(std::move(ground));
+    auto suzanne = std::make_unique<Mesh>(
+        "objects/suzanne.obj",
+        Point3(2.5, 4.5, 0.0),
+        Vector3(M_PI_2, 0.0, 0.0),
+        white
+    );
 
-    scene.add_light(std::make_unique<PointLight>(Point3(-1.0, 0.0, 1.0), RED, 1.0));
-    scene.add_light(std::make_unique<PointLight>(Point3(0.0, 0.0, 1.0), GREEN, 1.0));
-    scene.add_light(std::make_unique<PointLight>(Point3(1.0, 0.0, 1.0), BLUE, 1.0));
+    // auto suzanne = std::make_unique<Mesh>(
+    //     "objects/bugged.obj",
+    //     Point3(0.0, 1.0, 1.0),
+    //     Vector3(M_PI_2, 0.0, 0.0),
+    //     white
+    // );
+
+    scene.add_object(std::move(ground));
+    scene.add_object(std::move(suzanne));
+
+    scene.add_light(std::make_unique<PointLight>(Point3(-1.0, -1.0, 1.0), RED, 1.0));
+    scene.add_light(std::make_unique<PointLight>(Point3(0.0, -1.0, 1.0), GREEN, 1.0));
+    scene.add_light(std::make_unique<PointLight>(Point3(1.0, -1.0, 1.0), BLUE, 1.0));
 
     generate_image(camera, scene).to_ppm("result.ppm");
 

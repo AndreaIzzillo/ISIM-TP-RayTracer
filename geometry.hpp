@@ -6,6 +6,13 @@
 #define EPS 0.00001
 #define INF 10000.0
 
+#define ZERO  Point3(0.0)
+
+#define NULV  Vector3(0.0)
+#define UP    Vector3(0.0, 0.0, 1.0)
+#define RIGHT Vector3(0.0, 1.0, 0.0)
+#define FRONT Vector3(1.0, 0.0, 0.0)
+
 namespace RayTracer
 {
     class Pixel
@@ -23,12 +30,28 @@ namespace RayTracer
         }
     };
 
+    class Point2
+    {
+    public:
+        double x, y;
+
+        Point2() = default;
+        Point2(double x, double y): x(x), y(y) {};
+
+    public:
+        friend std::ostream& operator<<(std::ostream& out, Point2& p)
+        {
+            return out << "P(" << p.x << "," << p.y << ")";
+        }
+    };
+
     class Vector3
     {
     public:
         double x, y, z;
 
         Vector3() : x(0), y(0), z(0) {};
+        Vector3(double v): x(v), y(v), z(v) {};
         Vector3(double x, double y, double z) : x(x), y(y), z(z) {};
 
     public:
@@ -106,30 +129,31 @@ namespace RayTracer
         double x, y, z;
 
         Point3() : x(0), y(0), z(0) {};
+        Point3(double v): x(v), y(v), z(v) {};
         Point3(double x, double y, double z) : x(x), y(y), z(z) {};
 
     public:
-        Point3 operator+(const Vector3& v)
+        Point3 operator+(const Vector3& v) const
         {
             return Point3(x + v.x, y + v.y, z + v.z);
         }
 
-        Point3 operator-(const Vector3& v)
+        Point3 operator-(const Vector3& v) const
         {
             return Point3(x - v.x, y - v.y, z - v.z);
         }
 
-        Point3 operator+(const Point3& p)
+        Point3 operator+(const Point3& p) const
         {
             return Point3(x + p.x, y + p.y, z + p.z);
         }
 
-        Vector3 operator-(const Point3& p)
+        Vector3 operator-(const Point3& p) const
         {
             return Vector3(x - p.x, y - p.y, z - p.z);
         }
 
-        Point3 operator-()
+        Point3 operator-() const
         {
             return Point3(-x, -y, -z);
         }
@@ -147,6 +171,6 @@ namespace RayTracer
         Vector3 direction;
 
         Ray() = default;
-        Ray(Point3 o, Vector3 d): origin(o), direction(d) {};
+        Ray(Point3 o, Vector3 d): origin(o), direction(d.normalize()) {};
     };
 }
