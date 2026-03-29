@@ -140,7 +140,7 @@ Image generate_image(Camera& cam, Scene& scene, std::shared_ptr<Image> backgroun
         }
 
         if (_DEBUG)
-            std::cout << "Line " << y << " done." << "    " << "\r";
+            std::cout << "Line " << y << " done." << "    " << "\r" << std::flush;
     }
 
     if (_DEBUG)
@@ -158,53 +158,17 @@ int main(int argc, char **argv)
         M_PI / 3.0, M_PI / 4.0, 1.0, 2000
     );
 
-    auto tex = std::make_shared<Image>("texture/moon.ppm");
+    auto gray = std::make_shared<UniformTexture>(WHITE * 0.8, 0.9, 0.1, 10.0);
 
-    auto cyan = std::make_shared<UniformTexture>(BLUE, 0.0, 1.0, 10.0);
-    auto magenta = std::make_shared<UniformTexture>(MAGENTA, 0.0, 1.0, 10.0);
-    auto boule = std::make_shared<UniformTexture>(RED, 1.0, 0.0, 10.0);
-    auto white = std::make_shared<UniformTexture>(WHITE, 0.9, 0.1, 10.0);
-    auto chiant = std::make_shared<ImageTexture>(tex, 1.0, 0.0, 10.0);
-
-    auto tr1 = std::make_unique<Triangle>(
-            Point3(-1.5, 1.0, 0.0),
-            Point3(-0.5, 2.0, 0.0),
-            Point3(-1.0, 1.5, 1.0),
-            cyan
-    );
-    auto tr2 = std::make_unique<Triangle>(
-            Point3(0.5, 2.0, 0.0),
-            Point3(1.5, 1.0, 0.0),
-            Point3(1.0, 1.5, 1.0),
-            magenta
-    );
-    auto cool = std::make_unique<Sphere>(
-            Point3(0.0, 1.0, 0.3), 0.3, chiant
-    );
     auto ground = std::make_unique<Sphere>(
-            Point3(0.0, 0.0, -10000.0), 10000.00, white
+            Point3(0.0, 0.0, -1000.0), 1000.00, gray
     );
 
-    auto blorg = cool.get();
-
-    scene.add_object(std::move(tr1));
-    scene.add_object(std::move(tr2));
-    scene.add_object(std::move(cool));
     scene.add_object(std::move(ground));
 
-    blorg->rotate(M_PI, 0.0, 0.0);
-
-    //scene.add_light(std::make_unique<PointLight>(Point3(0.0, 0.0, 1.0), WHITE, 1.0));
     scene.add_light(std::make_unique<PointLight>(Point3(-1.0, 0.0, 1.0), RED, 1.0));
     scene.add_light(std::make_unique<PointLight>(Point3(0.0, 0.0, 1.0), GREEN, 1.0));
     scene.add_light(std::make_unique<PointLight>(Point3(1.0, 0.0, 1.0), BLUE, 1.0));
-    //scene.add_light(std::make_unique<PointLight>(Point3(0.0, 10.0, 1000.0), WHITE, 50.0));
-    // scene.add_light(std::make_unique<PointLight>(Point3(-1.25, -1.0, 0.01), RED, 0.1));
-    // scene.add_light(std::make_unique<PointLight>(Point3(-0.75, -1.0, 0.01), GREEN, 0.1));
-    // scene.add_light(std::make_unique<PointLight>(Point3(-0.25, -1.0, 0.01), BLUE, 0.1));
-    // scene.add_light(std::make_unique<PointLight>(Point3(0.25, -1.0, 0.01), CYAN, 0.1));
-    // scene.add_light(std::make_unique<PointLight>(Point3(0.75, -1.0, 0.01), MAGENTA, 0.1));
-    // scene.add_light(std::make_unique<PointLight>(Point3(1.25, -1.0, 0.01), YELLOW, 0.1));
 
     generate_image(camera, scene).to_ppm("result.ppm");
 
