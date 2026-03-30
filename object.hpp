@@ -157,7 +157,8 @@ namespace RayTracer
             Matrix33 m = Matrix33(oa, ob, oc);
 
             double det = m.determinant();
-            double invdet = 1 / det;
+            if (std::abs(det) < M_EPS)
+                return {false};
 
             Matrix33 minv = m.inverse();
 
@@ -170,10 +171,14 @@ namespace RayTracer
             if (param.x < 0.0 || param.y < 0.0 || param.z < 0.0)
                 return {false};
 
-            Vector3 og = (oa * param.x + ob * param.y + oc * param.z);
-            og = og / (param.x + param.y + param.z);
+            double sum = param.x + param.y + param.z;
+            if (std::abs(sum) < M_EPS)
+                return {false};
 
-            double t = og * ray.direction;
+            Vector3 og = (oa * param.x + ob * param.y + oc * param.z);
+            og = og / sum;
+
+            double t = 1.0 / sum;
 
             if (t < t_min || t > t_max)
                 return {false};
@@ -366,6 +371,7 @@ namespace RayTracer
                     continue;
                 
                 closest = temp_rec.t;
+                temp_rec.o = this;
                 rec = temp_rec;
             }
 
@@ -388,4 +394,3 @@ namespace RayTracer
         }
     };
 }
-

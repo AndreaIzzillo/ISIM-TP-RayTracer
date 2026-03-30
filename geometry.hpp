@@ -3,8 +3,10 @@
 #include <ostream>
 #include <cmath>
 
-#define EPS 0.00001
-#define INF 10000.0
+#define EPS   (double)1e-9
+#define M_EPS (double)1e-12
+#define INF   (double)1e+9
+#define M_INF (double)1e+12
 
 #define ZERO  Point3(0.0)
 

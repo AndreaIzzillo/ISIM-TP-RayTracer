@@ -11,9 +11,8 @@
 #include "light.hpp"
 #include "camera.hpp"
 
-#define LOADING true
 #define LIGHT_DISTANCE true
-#define REFLEXION_IT 2
+#define REFLEXION_IT 5
 
 namespace RayTracer
 {
@@ -32,9 +31,9 @@ namespace RayTracer
         {
             Image img = Image(cam->w_res, cam->h_res);
 
-            int loading_counter = 0;
+            std::cout << "Rendering..." << std::endl;
 
-            #pragma omp parallel for
+            #pragma omp parallel for collapse(2) schedule(dynamic,1)
             for (unsigned y = 0; y < cam->h_res; y++)
             {
                 for (unsigned x = 0; x < cam->w_res; x++)
@@ -43,26 +42,9 @@ namespace RayTracer
                     Color color = cast_ray(ray, 0.0, INF, *scene, background);
                     img.set_pixel(x, y, color);
                 }
-
-                if (LOADING)
-                {
-                    loading_counter++;
-
-                    /* Loading Display */
-                    constexpr int loading_size = 20;
-                    int progress = static_cast<int>(loading_size * loading_counter / (cam->h_res - 1));
-                    for (int i = 0; i < progress; i++)
-                        std::cout << "▓";
-                    for (int i = 0; i < loading_size - progress; i++)
-                        std::cout << "░";
-                    std::cout << " " << loading_counter << "/" << cam->h_res
-                              << " done." << "          " << "\r"
-                              << std::flush;
-                }
             }
 
-            if (LOADING)
-                std::cout << "\nSUPRA RTX DONE." << std::endl;
+            std::cout << "Done." << std::endl;
 
             return img;
         }

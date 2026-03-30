@@ -1,3 +1,4 @@
-![image](./museum/earth.png)
-![image](./museum/lights.png)
-![image](./museum/suzanne.png)
+![](./museum/earth.png)
+![](./museum/lights.png)
+![](./museum/suzanne.png)
+![](./museum/bus.png)

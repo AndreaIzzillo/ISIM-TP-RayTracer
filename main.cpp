@@ -12,9 +12,6 @@
 #include "camera.hpp"
 #include "renderer.hpp"
 
-#define _FD true
-#define _IT 2
-
 using namespace RayTracer;
 
 int main(int argc, char **argv)

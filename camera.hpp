@@ -78,12 +78,5 @@ namespace RayTracer
 
             return {C, (p - C)};
         }
-
-        /* Update parameters */
-        void set_focal_distance(double v)
-        {
-            d = v;
-            viewport = C + front * d + up * (height / 2) - right * (width / 2);
-        }
     };
 }
