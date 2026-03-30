@@ -18,7 +18,7 @@ namespace RayTracer
         Point3 p;
         Vector3 n;
         MaterialInfo mat;
-        Object* o;
+        const Object* o;
     } HitRecord;
 
     class Object
@@ -28,7 +28,7 @@ namespace RayTracer
         virtual ~Object() = default;
 
     public:
-        virtual HitRecord hit(Ray ray, double t_min, double t_max) = 0;
+        virtual HitRecord hit(const Ray& ray, double t_min, double t_max) const = 0;
     };
 
     class Sphere : public Object
@@ -39,19 +39,19 @@ namespace RayTracer
         Vector3 rotation;
 
         Sphere() = default;
-        Sphere(Point3 center, double radius, std::shared_ptr<TextureMaterial> mat)
+        Sphere(const Point3& center, double radius, std::shared_ptr<TextureMaterial> mat)
             : center(center), radius(radius)
         {
             material = mat;
         };
-        Sphere(Point3 center, double radius, Vector3 rotation, std::shared_ptr<TextureMaterial> mat)
+        Sphere(const Point3& center, double radius, const Vector3& rotation, std::shared_ptr<TextureMaterial> mat)
             : center(center), radius(radius), rotation(rotation)
         {
             material = mat;
         };
 
     public:
-        HitRecord hit(Ray ray, double t_min, double t_max) override
+        HitRecord hit(const Ray& ray, double t_min, double t_max) const override
         {
             Vector3 oc = center - ray.origin;
             auto a = ray.direction.norm_squared();
@@ -94,7 +94,7 @@ namespace RayTracer
         }
 
     public:
-        void rotate(Vector3 r)
+        void rotate(const Vector3& r)
         {
             double pi2 = 2.0 * M_PI;
             rotation.x = std::fmod(rotation.x + r.x, pi2);
@@ -103,7 +103,7 @@ namespace RayTracer
         }
 
     private:
-        Pixel mapper(Point3 p)
+        Pixel mapper(const Point3& p) const
         {
             Vector3 dir = (p - center).normalize();
 
@@ -140,7 +140,7 @@ namespace RayTracer
         Point3 c;
 
         Triangle() = default;
-        Triangle(Point3 a, Point3 b, Point3 c,
+        Triangle(const Point3& a, const Point3& b, const Point3& c,
                  std::shared_ptr<TextureMaterial> mat)
             : a(a), b(b), c(c)
         {
@@ -148,7 +148,7 @@ namespace RayTracer
         };
 
     public:
-        HitRecord hit(Ray ray, double t_min, double t_max) override
+        HitRecord hit(const Ray& ray, double t_min, double t_max) const override
         {
             Vector3 oa = a - ray.origin;
             Vector3 ob = b - ray.origin;
@@ -198,7 +198,7 @@ namespace RayTracer
         }
 
     private:
-        Pixel mapper(Point3 p)
+        Pixel mapper(const Point3& p) const
         {
             return Pixel(0, 0);
         }
@@ -213,7 +213,7 @@ namespace RayTracer
         Vector3 rotation;
 
         Mesh() = default;
-        Mesh(const char *obj_file, Point3 position, Vector3 rotation, std::shared_ptr<TextureMaterial> mat)
+        Mesh(const char *obj_file, const Point3& position, const Vector3& rotation, std::shared_ptr<TextureMaterial> mat)
             : position(position), rotation(rotation)
         {
             material = mat;
@@ -353,7 +353,7 @@ namespace RayTracer
         };
 
     public:
-        HitRecord hit(Ray ray, double t_min, double t_max) override
+        HitRecord hit(const Ray& ray, double t_min, double t_max) const override
         {
             HitRecord rec = {false};
 
@@ -373,7 +373,7 @@ namespace RayTracer
         }
     
     public:
-        void rotate(Vector3 r)
+        void rotate(const Vector3& r)
         {
             double pi2 = 2.0 * M_PI;
             rotation.x = std::fmod(rotation.x + r.x, pi2);
@@ -382,7 +382,7 @@ namespace RayTracer
         }
         
     private:
-        Pixel mapper(Point3 p)
+        Pixel mapper(const Point3& p) const
         {
             return Pixel(0, 0);
         }

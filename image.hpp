@@ -17,7 +17,6 @@ namespace RayTracer
         std::vector<Color> pixels;
 
         Image() = default;
-
         Image(const char *path)
         {
             auto file = std::ifstream(path);
@@ -41,8 +40,7 @@ namespace RayTracer
                 pixels[i].b = std::stod(b) / 255.0;
                 i++;
             }
-        }
-
+        };
         Image(unsigned width, unsigned height): width(width), height(height)
         {
             pixels = std::vector<Color>(width * height);
@@ -69,8 +67,7 @@ namespace RayTracer
             {
                 for (int i = 0; i < width; i++)
                 {
-                    auto c = pixels[width * j + i];
-                    c.clamp();
+                    auto c = pixels[width * j + i].clamp();
                     auto r = static_cast<int>(c.r * 255.999);
                     auto g = static_cast<int>(c.g * 255.999);
                     auto b = static_cast<int>(c.b * 255.999);

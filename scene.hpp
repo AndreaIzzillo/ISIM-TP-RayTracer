@@ -14,6 +14,7 @@ namespace RayTracer
         std::vector<std::unique_ptr<Light>> lights;
 
         Scene() = default;
+        ~Scene() = default;
 
     public:
         void add_object(std::unique_ptr<Object> obj)

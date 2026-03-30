@@ -17,7 +17,7 @@ namespace RayTracer
     {
     public:
         PointLight() = default;
-        PointLight(Point3 p, Color c, double i)
+        PointLight(const Point3& p, const Color& c, double i)
         {
             position = p;
             color = c;

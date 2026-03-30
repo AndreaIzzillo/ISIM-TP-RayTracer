@@ -36,7 +36,7 @@ namespace RayTracer
         Vector3 h_step;
     
     public:
-        Camera(Point3 center, Point3 point_at,
+        Camera(const Point3& center, const Point3& point_at,
                double horizontal_fov, double vertical_fov, double focal_dist,
                unsigned horizontal_resolution)
             : C(center), P(point_at),
@@ -62,10 +62,11 @@ namespace RayTracer
 
             viewport = C + front * d + up * (height / 2) - right * (width / 2);
         }
+        ~Camera() = default;
 
     public:
         /* Utilities */
-        Ray get_ray(unsigned x, unsigned y)
+        Ray get_ray(unsigned x, unsigned y) const
         {
             auto p = viewport;
 

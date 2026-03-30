@@ -52,14 +52,13 @@ namespace RayTracer
         }
 
     public:
-        void clamp()
+        Color clamp() const
         {
-            if (r < 0.0) r = 0.0;
-            if (r > 1.0) r = 1.0;
-            if (g < 0.0) g = 0.0;
-            if (g > 1.0) g = 1.0;
-            if (b < 0.0) b = 0.0;
-            if (b > 1.0) b = 1.0;
+            return Color(
+                r < 0.0 ? 0.0 : (r > 1.0 ? 1.0 : r),
+                g < 0.0 ? 0.0 : (g > 1.0 ? 1.0 : g),
+                b < 0.0 ? 0.0 : (b > 1.0 ? 1.0 : b)
+            );
         }
     };
 }

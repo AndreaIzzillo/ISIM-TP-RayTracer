@@ -23,23 +23,23 @@ namespace RayTracer
 
     public:
         virtual MaterialInfo get_info(
-                Point3& p,
-                std::function<Pixel(Point3 p)> mapper) = 0;
+                const Point3& p,
+                std::function<Pixel(Point3 p)> mapper) const = 0;
     };
 
     class UniformTexture : public TextureMaterial
     {
     public:
         UniformTexture() = default;
-        UniformTexture(Color color, double kd, double ks, int ns)
+        UniformTexture(const Color& color, double kd, double ks, int ns)
         {
             info = MaterialInfo{color, kd, ks, ns};
         }
 
     public:
         MaterialInfo get_info(
-                Point3& p,
-                std::function<Pixel(Point3 p)> mapper) override
+                const Point3& p,
+                std::function<Pixel(Point3 p)> mapper) const override
         {
             return info;
         }
@@ -57,8 +57,8 @@ namespace RayTracer
 
     public:
         MaterialInfo get_info(
-                Point3& p,
-                std::function<Pixel(Point3 p)> mapper) override
+                const Point3& p,
+                std::function<Pixel(Point3 p)> mapper) const override
         {
             auto ret = info;
             auto px = mapper(p);
