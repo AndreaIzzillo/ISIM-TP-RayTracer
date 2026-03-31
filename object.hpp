@@ -216,10 +216,11 @@ namespace RayTracer
 
         Point3 position;
         Vector3 rotation;
+        double scale;
 
         Mesh() = default;
-        Mesh(const char *obj_file, const Point3& position, const Vector3& rotation, std::shared_ptr<TextureMaterial> mat)
-            : position(position), rotation(rotation)
+        Mesh(const char *obj_file, const Point3& position, const Vector3& rotation, double scale, std::shared_ptr<TextureMaterial> mat)
+            : position(position), rotation(rotation), scale(scale)
         {
             material = mat;
 
@@ -331,30 +332,12 @@ namespace RayTracer
                             material
                         ));
 
-                        auto rx = RotXMatrix(rotation.x);
-                        auto ry = RotYMatrix(rotation.y);
-                        auto rz = RotZMatrix(rotation.z);
-
-                        tr->a = rx * tr->a;
-                        tr->b = rx * tr->b;
-                        tr->c = rx * tr->c;
-
-                        tr->a = ry * tr->a;
-                        tr->b = ry * tr->b;
-                        tr->c = ry * tr->c;
-
-                        tr->a = rz * tr->a;
-                        tr->b = rz * tr->b;
-                        tr->c = rz * tr->c;
-
-                        tr->a = tr->a + position;
-                        tr->b = tr->b + position;
-                        tr->c = tr->c + position;
-
                         triangles.push_back(std::move(tr));
                     }
                 }
             }
+
+            apply_transform();
         };
 
     public:
@@ -391,6 +374,32 @@ namespace RayTracer
         Pixel mapper(const Point3& p) const
         {
             return Pixel(0, 0);
+        }
+
+    private:
+        void apply_transform()
+        {
+            for (const auto& tr : triangles)
+            {
+                /* Apply scale */
+                tr->a *= scale;
+                tr->b *= scale;
+                tr->c *= scale;
+
+                /* Apply rotation */
+                auto rx = RotXMatrix(rotation.x);
+                auto ry = RotYMatrix(rotation.y);
+                auto rz = RotZMatrix(rotation.z);
+
+                tr->a = rz * ry * rx * tr->a;
+                tr->b = rz * ry * rx * tr->b;
+                tr->c = rz * ry * rx * tr->c;
+
+                /* Apply position */
+                tr->a = tr->a + position;
+                tr->b = tr->b + position;
+                tr->c = tr->c + position;
+            }
         }
     };
 }

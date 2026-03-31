@@ -112,13 +112,6 @@ namespace RayTracer
             return Vector3(-x, -y, -z);
         }
 
-        void operator-=(const double& l)
-        {
-            x -= l;
-            y -= l;
-            z -= l;
-        }
-
         /* Dot product */
         double operator*(const Vector3& v) const
         {
@@ -186,6 +179,50 @@ namespace RayTracer
         Point2(double x, double y): x(x), y(y) {};
 
     public:
+        Point2 operator*(const double& l) const
+        {
+            return Point2(x * l, y * l);
+        }
+
+        void operator*=(const double& l)
+        {
+            x *= l;
+            y *= l;
+        }
+
+        Point2 operator/(const double& l) const
+        {
+            return Point2(x / l, y / l);
+        }
+
+        void operator/=(const double& l)
+        {
+            x /= l;
+            y /= l;
+        }
+
+        Point2 operator+(const double& l) const
+        {
+            return Point2(x + l, y + l);
+        }
+
+        void operator+=(const double& l)
+        {
+            x += l;
+            y += l;
+        }
+
+        Point2 operator-(const double& l) const
+        {
+            return Point2(x - l, y - l);
+        }
+
+        void operator-=(const double& l)
+        {
+            x -= l;
+            y -= l;
+        }
+
         Point2 operator+(const Vector3& v) const
         {
             return Point2(x + v.x, y + v.y);
@@ -235,12 +272,6 @@ namespace RayTracer
             return Point2(-x, -y);
         }
 
-        void operator-=(const double& l)
-        {
-            x -= l;
-            y -= l;
-        }
-
         friend std::ostream& operator<<(std::ostream& out, Point2& p)
         {
             return out << "P(" << p.x << "," << p.y << ")";
@@ -259,6 +290,54 @@ namespace RayTracer
         Point3(double x, double y, double z) : x(x), y(y), z(z) {};
 
     public:
+        Point3 operator*(const double& l) const
+        {
+            return Point3(x * l, y * l, z * l);
+        }
+
+        void operator*=(const double& l)
+        {
+            x *= l;
+            y *= l;
+            z *= l;
+        }
+
+        Point3 operator/(const double& l) const
+        {
+            return Point3(x / l, y / l, z / l);
+        }
+
+        void operator/=(const double& l)
+        {
+            x /= l;
+            y /= l;
+            z /= l;
+        }
+
+        Point3 operator+(const double& l) const
+        {
+            return Point3(x + l, y + l, z + l);
+        }
+
+        void operator+=(const double& l)
+        {
+            x += l;
+            y += l;
+            z += l;
+        }
+
+        Point3 operator-(const double& l) const
+        {
+            return Point3(x - l, y - l, z - l);
+        }
+
+        void operator-=(const double& l)
+        {
+            x -= l;
+            y -= l;
+            z -= l;
+        }
+
         Point3 operator+(const Vector3& v) const
         {
             return Point3(x + v.x, y + v.y, z + v.z);
@@ -310,13 +389,6 @@ namespace RayTracer
         Point3 operator-() const
         {
             return Point3(-x, -y, -z);
-        }
-
-        void operator-=(const double& l)
-        {
-            x -= l;
-            y -= l;
-            z -= l;
         }
 
         friend std::ostream& operator<<(std::ostream& out, Point3& p)
