@@ -1,1 +1,0 @@
-/opt/homebrew/opt/llvm/bin/clang++ main.cpp -O3 -fopenmp && ./a.out
